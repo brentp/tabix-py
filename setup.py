@@ -5,7 +5,7 @@ import tabix
 
 ext = tabix.ffi.verifier.get_extension()
 
-setup(name='tabix-cffi',
-      py_modules=['tabix'],
+setup(name='tabix',
+      #py_modules=['tabix'],
       ext_package='tabix',
       ext_modules=[ext])

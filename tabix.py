@@ -66,7 +66,8 @@ C = ffi.verify('''
     libraries=['tabix', 'c', 'z'],
     library_dirs=["C"],
     depends=['C/*.h', 'C/*.c'],
-    include_dirs=[path, op.join(path, 'C')],
+    include_dirs=["C"],
+
     #ext_package='tabix'
 )
 
