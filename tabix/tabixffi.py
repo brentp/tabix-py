@@ -64,11 +64,12 @@ C = ffi.verify('''
 #include "tabix.h"
 ''',
     libraries=['tabix', 'c', 'z'],
-    library_dirs=["C"],
-    depends=['C/*.h', 'C/*.c'],
-    include_dirs=["C"],
+    #library_dirs=["C"],
+    #depends=['C/*.h', 'C/*.c'],
+    #sources=['C/*.c'],
+    #include_dirs=["C"],
 
-    #ext_package='tabix'
+    #ext_package='tabixffi'
 )
 
 class Tabix(object):
