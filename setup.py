@@ -1,15 +1,20 @@
 #from distutils.core import setup
 
-from setuptools import setup, find_packages
-from glob import glob
-import tabix
+from distutils.core import setup
 
-ext = tabix.ffi.verifier.get_extension()
+import tabix.tabixffi
+import cffi
+
+ext = tabix.tabixffi.ffi.verifier.get_extension()
+
+cffi.verifier.cleanup_tmpdir()
 
 setup(name='tabix',
-      packages=find_packages(),
+      packages=['tabix'],
       ext_package='tabixffi',
       ext_modules=[ext],
       zip_safe=False,
       install_requires=['cffi']
       )
+
+import tabix

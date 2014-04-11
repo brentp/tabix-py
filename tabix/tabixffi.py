@@ -58,7 +58,7 @@ const ti_conf_t *ti_get_conf(ti_index_t *idx);
 void ti_index_destroy(ti_index_t *idx);
 """)
 
-path = op.dirname(op.abspath(op.dirname(__file__)))
+#path = op.dirname(op.abspath(op.dirname(__file__)))
 
 C = ffi.verify('''
 #include "tabix.h"
@@ -69,7 +69,8 @@ C = ffi.verify('''
     #sources=['C/*.c'],
     #include_dirs=["C"],
 
-    #ext_package='tabixffi'
+    ext_package='tabixffi',
+    tmpdir=os.path.abspath(os.path.dirname(__file__)),
 )
 
 class Tabix(object):
