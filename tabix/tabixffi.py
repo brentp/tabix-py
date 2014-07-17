@@ -1,7 +1,7 @@
 """
 >>> t = Tabix('tabix/C/example.gtf.gz')
 >>> t.sequences
-['chr1', 'chr2']
+[u'chr1', u'chr2']
 
 >>> for item in t('chr1'):
 ...    print item[:40].split()
@@ -11,7 +11,7 @@
 >>> for item in t('chr1:2090-3000'):
 ...    print item[:40].split()
 ...    break
-['chr1', 'ENSEMBL', 'transcript', '1737', '4275', '.', '+', '.']
+['chr1', 'ENSEMBL', 'UTR', '1737', '2090', '.', '+', '.', 'gene_id']
 
 >>> t
 Tabix('tabix/C/example.gtf.gz')
@@ -25,6 +25,7 @@ from cffi import FFI
 
 ffi = FFI()
 ffi.cdef("""
+
 struct __ti_index_t;
 typedef struct __ti_index_t ti_index_t;
 
@@ -46,6 +47,7 @@ tabix_t *ti_open(const char *fn, const char *fnidx);
 int ti_lazy_index_load(tabix_t *t);
 int ti_index_build(const char *fn, const ti_conf_t *conf);
 void ti_close(tabix_t *t);
+void free (void* ptr);
 
 const char **ti_seqname(const ti_index_t *idx, int *n);
 
@@ -66,13 +68,14 @@ cfiles = [x for x in glob("%s/C/*.c" % path) if not x.endswith("main.c")]
 hfiles = [h for h in glob('%s/C/*.h' % path)]
 
 C = ffi.verify('''
+#include "stdlib.h"
 #include "tabix.h"
 ''',
     libraries=['c', 'z'],
     depends=hfiles + cfiles,
     sources=cfiles,
     include_dirs=["%s/C" % path],
-    ext_package='tabixffi',
+    ext_package='tabixffi'
 )
 
 class Tabix(object):
@@ -97,9 +100,11 @@ class Tabix(object):
     def sequences(self):
         n = ffi.new("int *")
         cnames = C.ti_seqname(self._tabix.idx, n)
-        names = [ffi.string(cnames[i]) for i in range(n[0])]
-        #C.free(cnames)
-        return names
+        try:
+            names = [ffi.string(cnames[i]).decode() for i in range(n[0])]
+            return names
+        finally:
+            C.free(cnames)
 
     @classmethod
     def build(cls, fname, seq_col=1, start_col=2, end_col=3, comment="#",
@@ -116,17 +121,16 @@ class Tabix(object):
         return Tabix(fname)
 
     def __call__(self, region, start=None, end=None, convert=False):
-        if start is None and ":" in region:
-            chrom, start_end = region.split(":")
-            start, end = map(int, start_end.split("-"))
-            assert start <= end
-            t_iter = C.ti_query(self._tabix, chrom, start, end)
-        else:
+        if start is None:
+            assert end is None
             t_iter = C.ti_querys(self._tabix, region)
+        else:
+            t_iter = C.ti_query(self._tabix, region, start, end)
 
         s_len = ffi.new("int *")
         # TODO: could yield a feature with start, end as ints.
         start_col, end_col = self._conf.bc, self._conf.ec
+        n_hits = s_len[0]
         try:
             next_rec = C.ti_read(self._tabix, t_iter, s_len)
             while next_rec:
@@ -134,6 +138,8 @@ class Tabix(object):
                 next_rec = C.ti_read(self._tabix, t_iter, s_len)
         finally:
             C.ti_iter_destroy(t_iter)
+
+    query = __call__
 
     def __del__(self):
         try:
