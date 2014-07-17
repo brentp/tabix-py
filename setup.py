@@ -1,6 +1,4 @@
-#from distutils.core import setup
-
-from distutils.core import setup
+from setuptools import setup
 
 import tabix.tabixffi
 import cffi

@@ -13,10 +13,12 @@
 ...    break
 ['chr1', 'ENSEMBL', 'transcript', '1737', '4275', '.', '+', '.']
 
+>>> t
+Tabix('C/example.gtf.gz')
+
 >>> del t
 """
 
-import os
 import os.path as op
 from glob import glob
 from cffi import FFI
@@ -63,14 +65,14 @@ void ti_index_destroy(ti_index_t *idx);
 C = ffi.verify('''
 #include "tabix.h"
 ''',
-    libraries=['tabix', 'c', 'z'],
-    #library_dirs=["C"],
-    #depends=['C/*.h', 'C/*.c'],
-    #sources=['C/*.c'],
-    #include_dirs=["C"],
+    libraries=['c', 'z'],
+    library_dirs=["C"],
+    depends=glob('C/*.h') + 
+                [x for x in glob('C/*.c') if not x.endswith('main.c')],
+    sources=glob('/home/brentp/src/tabix-py/C/*.c'),
+    include_dirs=["C"],
 
     ext_package='tabixffi',
-    tmpdir=os.path.abspath(os.path.dirname(__file__)),
 )
 
 class Tabix(object):
@@ -89,6 +91,7 @@ class Tabix(object):
             self._tabix = C.ti_open(fn, ffi.NULL)
         C.ti_lazy_index_load(self._tabix)
         self._conf = C.ti_get_conf(self._tabix.idx)
+        self.fn = fn
 
     @property
     def sequences(self):
@@ -141,6 +144,9 @@ class Tabix(object):
 
     def close(self):
         C.ti_close(self._tabix)
+
+    def __repr__(self):
+        return "%s('%s')" % (self.__class__.__name__, self.fn)
 
 if __name__ == "__main__":
 
