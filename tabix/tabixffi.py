@@ -1,5 +1,5 @@
 """
->>> t = Tabix('C/example.gtf.gz')
+>>> t = Tabix('tabix/C/example.gtf.gz')
 >>> t.sequences
 ['chr1', 'chr2']
 
@@ -14,7 +14,7 @@
 ['chr1', 'ENSEMBL', 'transcript', '1737', '4275', '.', '+', '.']
 
 >>> t
-Tabix('C/example.gtf.gz')
+Tabix('tabix/C/example.gtf.gz')
 
 >>> del t
 """
