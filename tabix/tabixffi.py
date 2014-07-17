@@ -60,18 +60,18 @@ const ti_conf_t *ti_get_conf(ti_index_t *idx);
 void ti_index_destroy(ti_index_t *idx);
 """)
 
-#path = op.dirname(op.abspath(op.dirname(__file__)))
+path = op.relpath(op.dirname(__file__))
+
+cfiles = [x for x in glob("%s/C/*.c" % path) if not x.endswith("main.c")]
+hfiles = [h for h in glob('%s/C/*.h' % path)]
 
 C = ffi.verify('''
 #include "tabix.h"
 ''',
     libraries=['c', 'z'],
-    library_dirs=["C"],
-    depends=glob('C/*.h') + 
-                [x for x in glob('C/*.c') if not x.endswith('main.c')],
-    sources=glob('/home/brentp/src/tabix-py/C/*.c'),
-    include_dirs=["C"],
-
+    depends=hfiles + cfiles,
+    sources=cfiles,
+    include_dirs=["%s/C" % path],
     ext_package='tabixffi',
 )
 
